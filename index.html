@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Upitnik za salone</title>
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -236,6 +236,7 @@
     }
     .drag-handle { color: #c9a882; flex-shrink: 0; margin-left: auto; }
     .question-hint { font-size: 0.8rem; color: #9c8a78; margin-top: -0.6rem; margin-bottom: 1rem; line-height: 1.5; }
+    .ranking-hint {
       text-align: center;
       color: #b09a87;
       font-size: 0.78rem;
@@ -264,7 +265,7 @@
 <p class="footer-note">Svi odgovori koriste se isključivo za prilagodbu platforme tvom salonu.</p>
 
 <script>
-  emailjs.init("nsss6ZERkm1QJyPFd");
+  const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1508487289414750420/DOzKQaDYHNqCBYUEdYZ3HEyt3qfmUDonLr4rT3FvIdXia0L8EGD1o1cmVJH3aHD8nLnZ";
 
   const SECTIONS = [
     {
@@ -601,20 +602,66 @@
     if (btn) btn.disabled = !isStepValid();
   }
 
+  function buildDiscordEmbeds() {
+    const embeds = [];
+    const date = new Date().toLocaleDateString("hr-HR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+    embeds.push({
+      title: "📋 Novi upitnik — Kornelija",
+      description: `Datum: **${date}**`,
+      color: 0xC9A882,
+    });
+
+    SECTIONS.forEach(section => {
+      const fields = [];
+      section.questions.forEach(q => {
+        const val = answers[q.id];
+        if (!val || (Array.isArray(val) && val.length === 0)) return;
+        let valueStr;
+        if (q.type === "ranking") {
+          valueStr = val.map((v, i) => `${i + 1}. ${v}`).join("\n");
+        } else if (Array.isArray(val)) {
+          valueStr = val.join(", ");
+        } else {
+          valueStr = val;
+        }
+        fields.push({
+          name: q.label.length > 256 ? q.label.substring(0, 253) + "..." : q.label,
+          value: valueStr.length > 1024 ? valueStr.substring(0, 1021) + "..." : valueStr,
+          inline: false
+        });
+      });
+
+      if (fields.length > 0) {
+        embeds.push({
+          title: section.title,
+          color: 0xE8D8C4,
+          fields
+        });
+      }
+    });
+
+    return embeds;
+  }
+
   async function handleSubmit() {
     if (sending) return;
     sending = true;
     document.getElementById("app").innerHTML = `<div class="sending-overlay">Šaljemo odgovore...</div>`;
 
     try {
-      await emailjs.send("service_vy573zu", "template_rnibdzg", {
-        odgovori: formatAnswers()
+      const res = await fetch(DISCORD_WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embeds: buildDiscordEmbeds() })
       });
+
+      if (!res.ok) throw new Error("HTTP " + res.status);
       renderSubmitted();
     } catch (err) {
       document.getElementById("app").innerHTML = `
         <div class="submitted">
-          <div class="submitted-icon">!</div>
+          <div class="submitted-icon">⚠️</div>
           <h2 class="submitted-title">Nešto nije u redu</h2>
           <p class="submitted-text">Slanje nije uspjelo. Molimo kopiraj odgovore i pošalji ih ručno.</p>
           <div class="submitted-btns">
