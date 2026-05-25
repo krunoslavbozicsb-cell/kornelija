@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upitnik za salone</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #f7f0e8 0%, #ede5d8 100%);
+      padding: 2rem 1rem;
+      font-family: 'DM Sans', sans-serif;
+      color: #3d2b1a;
+    }
+
+    .header {
+      text-align: left;
+      max-width: 620px;
+      margin: 0 auto 2rem auto;
+    }
+    .header-title {
+      font-family: 'Lora', serif;
+      font-size: 1.6rem;
+      color: #2c1f14;
+      font-weight: 500;
+    }
+
+    .card {
+      max-width: 620px;
+      margin: 0 auto;
+      background: #fffcf8;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 4px 32px rgba(139,100,71,0.10);
+    }
+
+    /* Progress */
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: #9c8a78;
+      text-transform: uppercase;
+    }
+    .progress-track {
+      height: 3px;
+      background: #ede8e1;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #c9a882, #8b6447);
+      border-radius: 2px;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* Section header */
+    .section-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      color: #c9a882;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+    .section-title {
+      font-family: 'Lora', serif;
+      font-size: 1.4rem;
+      color: #2c1f14;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+    .section-subtitle {
+      color: #7a6453;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Questions */
+    .question { margin-bottom: 2.2rem; }
+    .question-label {
+      display: block;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #2c1f14;
+      font-family: 'Lora', serif;
+      font-weight: 500;
+    }
+    .required { color: #c9a882; margin-left: 4px; }
+    .optional-tag { font-size: 0.8rem; color: #9c8a78; margin-left: 6px; font-family: 'DM Sans', sans-serif; }
+
+    .options { display: flex; flex-direction: column; gap: 0.6rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1.5px solid #e8e0d8;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      color: #3d2b1a;
+      user-select: none;
+    }
+    .option:hover { border-color: #c9a882; }
+    .option.selected { border-color: #c9a882; background: #fdf8f3; }
+
+    .radio-dot {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid #c9a882;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      background: transparent;
+    }
+    .option.selected .radio-dot {
+      border-width: 5px;
+      background: #fff;
+    }
+
+    .check-box {
+      width: 18px; height: 18px;
+      border-radius: 4px;
+      border: 2px solid #c9a882;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      background: transparent;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .option.selected .check-box {
+      background: #c9a882;
+      border-color: #c9a882;
+    }
+    .check-icon { display: none; }
+    .option.selected .check-icon { display: block; }
+
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      border: 1.5px solid #e8e0d8;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      color: #3d2b1a;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    textarea { resize: vertical; line-height: 1.6; }
+    textarea:focus, input[type="text"]:focus { border-color: #c9a882; }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .btn {
+      padding: 0.85rem 2rem;
+      border-radius: 8px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: opacity 0.15s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #c9a882, #8b6447);
+      color: #fff;
+    }
+    .btn-primary:disabled {
+      background: #e8e0d8;
+      color: #9c8a78;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: #8b6447;
+      border: 1.5px solid #c9a882;
+    }
+    .btn-spacer { flex: 1; }
+
+    /* Submitted */
+    .submitted { text-align: center; }
+    .submitted-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .submitted-title {
+      font-family: 'Lora', serif;
+      font-size: 1.4rem;
+      color: #2c1f14;
+      margin-bottom: 0.75rem;
+    }
+    .submitted-text { color: #7a6453; line-height: 1.7; margin-bottom: 2rem; }
+    .submitted-btns { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .ranking-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1.5px solid #e8e0d8;
+      background: #fff;
+      cursor: grab;
+      transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      color: #3d2b1a;
+      user-select: none;
+    }
+    .ranking-item:active { cursor: grabbing; opacity: 0.8; }
+    .ranking-item.drag-over { border-color: #c9a882; background: #fdf8f3; }
+    .ranking-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: #c9a882;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .drag-handle { color: #c9a882; flex-shrink: 0; margin-left: auto; }
+    .question-hint { font-size: 0.8rem; color: #9c8a78; margin-top: -0.6rem; margin-bottom: 1rem; line-height: 1.5; }
+      text-align: center;
+      color: #b09a87;
+      font-size: 0.78rem;
+      margin-top: 1.5rem;
+    }
+
+    .sending-overlay {
+      text-align: center;
+      padding: 1rem 0;
+      color: #8b6447;
+      font-family: 'Lora', serif;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">Upitnik: Kornelija</div>
+</div>
+
+<div class="card" id="card">
+  <div id="app"></div>
+</div>
+
+<p class="footer-note">Svi odgovori koriste se isključivo za prilagodbu platforme tvom salonu.</p>
+
+<script>
+  emailjs.init("nsss6ZERkm1QJyPFd");
+
+  const SECTIONS = [
+    {
+      id: "rezervacije",
+      title: "Rezervacije i komunikacija",
+      subtitle: "Kako klijenti dolaze do tebe danas",
+      questions: [
+        {
+          id: "kako_rezerviraju",
+          label: "Poredaj kako klijenti rezerviraju — od najčešćeg do najrjeđeg (povuci za promjenu redosljeda):",
+          hint: "Znamo gdje booking treba biti dostupan da zamijeni kanale koji ti oduzimaju najviše vremena.",
+          type: "ranking",
+          options: ["WhatsApp / Viber", "Instagram DM", "Web stranica", "Osobno u salonu", "Poziv", "Drugo"],
+        },
+        {
+          id: "termini_tjedno",
+          label: "Koliko termina tjedno otprilike imaš?",
+          hint: "Pomaže nam procijeniti koliko vremena možemo osloboditi automatizacijom.",
+          type: "radio",
+          options: ["Manje od 10", "10–20", "20–35", "Više od 35"],
+        },
+        {
+          id: "vrijeme_dopisivanje",
+          label: "Koliko vremena dnevno trošiš na organizaciju termina i klijenata?",
+          hint: "Svaki taj sat je trošak koji sustav može preuzeti umjesto tebe.",
+          type: "radio",
+          options: ["Manje od 15 minuta", "15–30 minuta", "30–60 minuta", "Više od sat vremena"],
+        },
+        {
+          id: "no_show",
+          label: "Dogodi li se da klijent ne dođe bez najave?",
+          hint: "Automatski podsjetnici značajno smanjuju broj propuštenih termina.",
+          type: "radio",
+          options: ["Rijetko (manje od jedanput mjesečno)", "Povremeno (jednom-dvaput mjesečno)", "Često (svaki tjedan)"],
+        },
+        {
+          id: "podsjetnici",
+          label: "Šalješ li podsjetnik klijentima ručno?",
+          hint: "Ako to radiš ručno, to je jedan od prvih procesa koje automatiziramo.",
+          type: "radio",
+          options: ["Da, uvijek", "Ponekad, ako se sjetim", "Ne šaljem"],
+        },
+      ],
+    },
+    {
+      id: "usluge",
+      title: "Usluge",
+      subtitle: "Što nudiš i kako su organizirane",
+      questions: [
+        {
+          id: "broj_usluga",
+          label: "Koliko različitih usluga nudiš?",
+          hint: "Utječe na složenost booking forme i koliko opcija klijent vidi.",
+          type: "radio",
+          options: ["1–5", "6–10", "11–20", "Više od 20"],
+        },
+        {
+          id: "trajanje_usluga",
+          label: "Razlikuju li se usluge po trajanju?",
+          hint: "Kalendar mora blokirati točno trajanje svake usluge da ne dođe do preklapanja termina.",
+          type: "radio",
+          options: ["Da, svaka traje drugačije", "Uglavnom jednako, uz par iznimaka", "Ne, sve traju otprilike isto"],
+        },
+        {
+          id: "napomene_usluge",
+          label: "Postoji li usluga koja zahtijeva posebnu napomenu ili pripremu za klijenta?",
+          hint: "Sustav može automatski poslati napomenu klijentu zajedno s potvrdom rezervacije.",
+          type: "textarea",
+          placeholder: "Npr. doći bez laka, ne mazati kremu, alergije...",
+        },
+      ],
+    },
+    {
+      id: "klijenti",
+      title: "Klijenti",
+      subtitle: "Tko su tvoji klijenti i kako ih pratiš",
+      questions: [
+        {
+          id: "stalni_klijenti",
+          label: "Imaš li stalnih klijenata koji dolaze redovito?",
+          hint: "Stalnim klijentima možemo omogućiti brzu ponovnu rezervaciju bez ponovnog unosa podataka.",
+          type: "radio",
+          options: ["Da, većina su stalni klijenti", "Miješano, otprilike pola-pola", "Uglavnom novi klijenti"],
+        },
+        {
+          id: "pracenje_stalnih",
+          label: "Pratiš li stalne klijente negdje?",
+          hint: "Sve evidencije prebacujemo u admin panel — ništa se ne gubi i sve je na jednom mjestu.",
+          type: "radio",
+          options: ["Da, imam evidenciju", "Samo u glavi / pamtim ih", "Ne pratim ih posebno"],
+        },
+        {
+          id: "podaci_klijenata",
+          label: "Kada klijent dođe prvi put, uzimaš li njihove podatke?",
+          hint: "Definira što sustav automatski sprema pri prvoj rezervaciji.",
+          type: "checkbox",
+          options: ["Ime i prezime", "Broj mobitela", "Email", "Ne uzimam posebno"],
+        },
+        {
+          id: "ponavljajuci_termini",
+          label: "Ima li klijenata koji uvijek zakazuju isto (ista usluga, isti dan i sat)?",
+          hint: "Za takve klijente možemo postaviti automatsku ponavljajuću rezervaciju.",
+          type: "radio",
+          options: ["Da, nekoliko takvih", "Rijetko", "Ne"],
+        },
+      ],
+    },
+    {
+      id: "administracija",
+      title: "Administracija i alati",
+      subtitle: "Kako vodiš evidenciju i što koristiš danas",
+      questions: [
+        {
+          id: "evidencija_termina",
+          label: "Gdje trenutno vodiš evidenciju termina?",
+          hint: "Sve to zamjenjujemo jednim preglednim kalendarom koji uvijek imaš uz sebe.",
+          type: "checkbox",
+          options: ["Papir / bilježnica", "Mobitel (notes, galerija)", "Google Calendar", "Aplikacija (koja?)", "Nigdje posebno"],
+        },
+        {
+          id: "evidencija_aplikacija",
+          label: "Ako koristiš aplikaciju, koja je?",
+          hint: "Provjeravamo može li se postojeća baza klijenata prenijeti u novi sustav.",
+          type: "text",
+          placeholder: "Npr. Booksy, MojSalon, nešto drugo...",
+          optional: true,
+        },
+        {
+          id: "prihodi",
+          label: "Pratiš li prihode (koliko si zaradila u danu/tjednu/mjesecu)?",
+          hint: "Admin panel može automatski pratiti prihode bez ikakvog dodatnog rada s tvoje strane.",
+          type: "radio",
+          options: ["Da, redovito", "Ponekad", "Ne pratim"],
+        },
+      ],
+    },
+    {
+      id: "tehnologija",
+      title: "Tehnologija i navike",
+      subtitle: "Kako koristiš digitalne alate u poslovanju",
+      questions: [
+        {
+          id: "mobitel_laptop",
+          label: "Što više koristiš za posao?",
+          hint: "Osiguravamo da admin panel bude savršen na uređaju koji svakodnevno koristiš.",
+          type: "radio",
+          options: ["Uglavnom mobitel", "Uglavnom laptop/PC", "Podjednako oboje"],
+        },
+        {
+          id: "instagram_dm",
+          label: "Koristiš li Instagram za komunikaciju s klijentima (DM poruke)?",
+          hint: "Ako primaš rezervacije tamo, to je kanal koji booking treba zamijeniti.",
+          type: "radio",
+          options: ["Da, puno", "Ponekad", "Ne, ne koristim za rezervacije"],
+        },
+        {
+          id: "trenutni_booking",
+          label: "Koristiš li trenutni booking sustav na webu ili ga klijenti ignoriraju?",
+          hint: "Pomaže nam razumjeti zašto trenutni sustav ne funkcionira i što treba biti drugačije.",
+          type: "radio",
+          options: ["Klijenti ga koriste redovito", "Rijetko, većina svejedno zove/piše", "Nitko ga ne koristi", "Nemam booking na webu"],
+        },
+        {
+          id: "najveci_problem",
+          label: "Što te najviše živcira u organizaciji posla danas?",
+          hint: "Najvažniji odgovor u cijelom upitniku — slobodno napiši sve.",
+          type: "textarea",
+          placeholder: "Slobodno napiši, ovo nam je najvažniji odgovor.",
+        },
+      ],
+    },
+  ];
+
+  const TOTAL = SECTIONS.length;
+  let step = 1;
+  let answers = {};
+  let sending = false;
+
+  function formatAnswers() {
+    let body = "UPITNIK: Salon\n";
+    body += "Datum: " + new Date().toLocaleDateString("hr-HR") + "\n\n";
+    body += "=".repeat(50) + "\n\n";
+    SECTIONS.forEach(section => {
+      body += section.title.toUpperCase() + "\n";
+      body += "-".repeat(40) + "\n";
+      section.questions.forEach(q => {
+        const val = answers[q.id];
+        if (!val || (Array.isArray(val) && val.length === 0)) return;
+        body += "\n" + q.label + "\n";
+        if (q.type === "ranking") {
+          val.forEach((v, i) => { body += `  ${i+1}. ${v}\n`; });
+        } else {
+          body += "> " + (Array.isArray(val) ? val.join(", ") : val) + "\n";
+        }
+      });
+      body += "\n";
+    });
+    return body;
+  }
+
+  function isStepValid() {
+    const section = SECTIONS[step - 1];
+    return section.questions.filter(q => !q.optional).every(q => {
+      if (q.type === "ranking") return true;
+      const v = answers[q.id];
+      if (!v) return false;
+      if (Array.isArray(v)) return v.length > 0;
+      return v.toString().trim().length > 0;
+    });
+  }
+
+  function initRanking(q) {
+    if (!answers[q.id]) answers[q.id] = [...q.options];
+  }
+
+  function renderRanking(q) {
+    initRanking(q);
+    const items = answers[q.id];
+    const itemsHtml = items.map((opt, i) => `
+      <div class="ranking-item" draggable="true"
+        data-index="${i}" data-qid="${q.id}"
+        ondragstart="dragStart(event)"
+        ondragover="dragOver(event)"
+        ondragleave="dragLeave(event)"
+        ondrop="dragDrop(event,'${q.id}')">
+        <div class="ranking-num">${i + 1}</div>
+        <span>${opt}</span>
+        <svg class="drag-handle" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="5" cy="4" r="1.5" fill="#c9a882"/>
+          <circle cx="11" cy="4" r="1.5" fill="#c9a882"/>
+          <circle cx="5" cy="8" r="1.5" fill="#c9a882"/>
+          <circle cx="11" cy="8" r="1.5" fill="#c9a882"/>
+          <circle cx="5" cy="12" r="1.5" fill="#c9a882"/>
+          <circle cx="11" cy="12" r="1.5" fill="#c9a882"/>
+        </svg>
+      </div>`).join("");
+
+    return `
+      <div class="question">
+        <label class="question-label">${q.label}</label>
+        ${q.hint ? `<p class="question-hint">${q.hint}</p>` : ''}
+        <div class="ranking-list" id="ranking-${q.id}">${itemsHtml}</div>
+        <div class="ranking-hint">Na mobitelu: pritisni i drži za pomicanje</div>
+      </div>`;
+  }
+
+  let dragSrcIndex = null;
+
+  function dragStart(e) {
+    dragSrcIndex = parseInt(e.currentTarget.dataset.index);
+    e.dataTransfer.effectAllowed = 'move';
+  }
+  function dragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+  }
+  function dragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+  function dragDrop(e, qid) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    const targetIndex = parseInt(e.currentTarget.dataset.index);
+    if (dragSrcIndex === null || dragSrcIndex === targetIndex) return;
+    const arr = [...answers[qid]];
+    const [moved] = arr.splice(dragSrcIndex, 1);
+    arr.splice(targetIndex, 0, moved);
+    answers[qid] = arr;
+    dragSrcIndex = null;
+    render();
+  }
+
+  function toggleOption(id, value, type) {
+    if (type === "radio") {
+      answers[id] = value;
+    } else {
+      const current = answers[id] || [];
+      if (current.includes(value)) {
+        answers[id] = current.filter(v => v !== value);
+      } else {
+        answers[id] = [...current, value];
+      }
+    }
+    render();
+  }
+
+  function renderQuestion(q) {
+    const val = answers[q.id];
+
+    if (q.type === "ranking") return renderRanking(q);
+
+    if (q.type === "radio" || q.type === "checkbox") {
+      const optionsHtml = q.options.map(opt => {
+        const isSelected = q.type === "radio"
+          ? val === opt
+          : (val || []).includes(opt);
+        const indicator = q.type === "radio"
+          ? `<div class="radio-dot"></div>`
+          : `<div class="check-box"><svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+        return `<div class="option ${isSelected ? 'selected' : ''}" onclick="toggleOption('${q.id}', ${JSON.stringify(opt)}, '${q.type}')">${indicator}<span>${opt}</span></div>`;
+      }).join("");
+
+      return `
+        <div class="question">
+          <label class="question-label">${q.label}${!q.optional ? '<span class="required">*</span>' : ''}</label>
+          ${q.hint ? `<p class="question-hint">${q.hint}</p>` : ''}
+          <div class="options">${optionsHtml}</div>
+        </div>`;
+    }
+
+    if (q.type === "textarea") {
+      return `
+        <div class="question">
+          <label class="question-label">${q.label}${!q.optional ? '<span class="required">*</span>' : ''}</label>
+          ${q.hint ? `<p class="question-hint">${q.hint}</p>` : ''}
+          <textarea rows="4" placeholder="${q.placeholder || ''}" oninput="answers['${q.id}']=this.value;updateBtn()">${val || ''}</textarea>
+        </div>`;
+    }
+
+    if (q.type === "text") {
+      return `
+        <div class="question">
+          <label class="question-label">${q.label}<span class="optional-tag">(nije obavezno)</span></label>
+          ${q.hint ? `<p class="question-hint">${q.hint}</p>` : ''}
+          <input type="text" placeholder="${q.placeholder || ''}" value="${val || ''}" oninput="answers['${q.id}']=this.value" />
+        </div>`;
+    }
+
+    return "";
+  }
+
+  function updateBtn() {
+    const btn = document.getElementById("next-btn");
+    if (btn) btn.disabled = !isStepValid();
+  }
+
+  async function handleSubmit() {
+    if (sending) return;
+    sending = true;
+    document.getElementById("app").innerHTML = `<div class="sending-overlay">Šaljemo odgovore...</div>`;
+
+    try {
+      await emailjs.send("service_vy573zu", "template_rnibdzg", {
+        odgovori: formatAnswers()
+      });
+      renderSubmitted();
+    } catch (err) {
+      document.getElementById("app").innerHTML = `
+        <div class="submitted">
+          <div class="submitted-icon">!</div>
+          <h2 class="submitted-title">Nešto nije u redu</h2>
+          <p class="submitted-text">Slanje nije uspjelo. Molimo kopiraj odgovore i pošalji ih ručno.</p>
+          <div class="submitted-btns">
+            <button class="btn btn-primary" onclick="copyAnswers()">Kopiraj sve odgovore</button>
+            <button class="btn btn-secondary" onclick="resetForm()">Pokušaj ponovno</button>
+          </div>
+        </div>`;
+      sending = false;
+    }
+  }
+
+  function renderSubmitted() {
+    document.getElementById("app").innerHTML = `
+      <div class="submitted">
+        <div class="submitted-icon">✓</div>
+        <h2 class="submitted-title">Hvala!</h2>
+        <p class="submitted-text">Odgovori su uspješno poslani. Javit ćemo se uskoro.</p>
+        <div class="submitted-btns">
+          <button class="btn btn-secondary" onclick="resetForm()">Novi upitnik</button>
+        </div>
+      </div>`;
+  }
+
+  function copyAnswers() {
+    navigator.clipboard.writeText(formatAnswers()).then(() => {
+      const btn = event.target;
+      btn.textContent = "Kopirano! ✓";
+      setTimeout(() => btn.textContent = "Kopiraj sve odgovore", 2500);
+    });
+  }
+
+  function resetForm() {
+    step = 1;
+    answers = {};
+    sending = false;
+    render();
+  }
+
+  function goNext() {
+    if (step < TOTAL) { step++; render(); window.scrollTo(0,0); }
+  }
+
+  function goPrev() {
+    if (step > 1) { step--; render(); window.scrollTo(0,0); }
+  }
+
+  function render() {
+    const section = SECTIONS[step - 1];
+    const pct = Math.round(((step - 1) / TOTAL) * 100);
+    const valid = isStepValid();
+    const isLast = step === TOTAL;
+
+    const questionsHtml = section.questions.map(renderQuestion).join("");
+
+    const backBtn = step > 1
+      ? `<button class="btn btn-secondary" onclick="goPrev()">← Natrag</button>`
+      : `<div></div>`;
+
+    const nextBtn = isLast
+      ? `<button id="next-btn" class="btn btn-primary" onclick="handleSubmit()" ${!valid ? 'disabled' : ''}>Pošalji upitnik ✓</button>`
+      : `<button id="next-btn" class="btn btn-primary" onclick="goNext()" ${!valid ? 'disabled' : ''}>Dalje →</button>`;
+
+    document.getElementById("app").innerHTML = `
+      <div class="progress-meta">
+        <span>Korak ${step} od ${TOTAL}</span>
+        <span>${pct}%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width:${pct}%"></div>
+      </div>
+
+      <div class="section-label">${step}. dio</div>
+      <h2 class="section-title">${section.title}</h2>
+      <p class="section-subtitle">${section.subtitle}</p>
+
+      ${questionsHtml}
+
+      <div class="btn-row">
+        ${backBtn}
+        ${nextBtn}
+      </div>
+    `;
+  }
+
+  render();
+</script>
+</body>
+</html>
