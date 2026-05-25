@@ -565,7 +565,8 @@
         const indicator = q.type === "radio"
           ? `<div class="radio-dot"></div>`
           : `<div class="check-box"><svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
-        return `<div class="option ${isSelected ? 'selected' : ''}" onclick="toggleOption('${q.id}', ${JSON.stringify(opt)}, '${q.type}')">${indicator}<span>${opt}</span></div>`;
+        const escapedOpt = JSON.stringify(opt).replace(/"/g, '&quot;');
+        return `<div class="option ${isSelected ? 'selected' : ''}" onclick="toggleOption('${q.id}', ${escapedOpt}, '${q.type}')">${indicator}<span>${opt}</span></div>`;
       }).join("");
 
       return `
